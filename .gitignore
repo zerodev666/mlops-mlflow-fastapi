@@ -1,0 +1,15 @@
+# secrets
+.env
+*.key
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# docker
+*.log
+
+# mlflow artifacts / runs (원하면 제외)
+mlruns/
