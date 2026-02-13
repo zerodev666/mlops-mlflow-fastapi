@@ -13,3 +13,13 @@ venv/
 
 # mlflow artifacts / runs (원하면 제외)
 mlruns/
+
+# IDE
+.idea/
+
+# MLflow artifacts & local DB
+mlartifacts/
+mlflow.db
+
+# media / misc
+*.png
