@@ -1,0 +1,50 @@
+services:
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    container_name: mlflow
+    working_dir: /app
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_SERVER_DISABLE_SECURITY_MIDDLEWARE=false
+
+      #- MLFLOW_SERVER_ALLOWED_HOSTS=localhost, 127.0.0.1, mlflow
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import urllib.request; req=urllib.request.Request('http://127.0.0.1:5000/', headers={'Host':'localhost'}); urllib.request.urlopen(req, timeout=3).read(); print('ok')"
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+    restart: unless-stopped
+
+
+  api:
+    image: fastapi-mlflow-serve:dev
+    container_name: fastapi-serve
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./mlruns:/app/mlruns
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MLFLOW_REGISTRY_URI=http://mlflow:5000
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS http://127.0.0.1:8000/ready | grep -q "true"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
