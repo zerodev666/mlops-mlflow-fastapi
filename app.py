@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Header, HTTPException, UploadFile, File, HTTPException
+from fastapi import FastAPI, Header, HTTPException, UploadFile, File
 from pydantic import BaseModel
 import mlflow
 from mlflow.exceptions import MlflowException, RestException
@@ -102,7 +102,7 @@ def live():
 @app.get("/ready")
 def ready():
     if model is None:
-        return {"status": False, "reason": "model_not_loaded"}
+        return {"status": False, "reason": "model_not_loaded"}, 503
     return {"status": True, "model_version": loaded_version}
 
 
@@ -119,6 +119,9 @@ def admin_reload(x_admin_token: str | None = Header(default=None)):
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
+    if model is None:
+        raise HTTPException(status=503, detail="Model not ready")
+
     if is_reloading:
         raise  HTTPException(status_code=503, detail="Model is reloading. Try again.")
     # 파일을 읽어서 바이트로 가져오기 (현재는 추론 진행 안함)
